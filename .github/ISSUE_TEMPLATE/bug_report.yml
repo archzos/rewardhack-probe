@@ -1,0 +1,11 @@
+name: Bug report
+description: Report a problem in rewardhack-probe
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
