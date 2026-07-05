@@ -200,6 +200,27 @@ def fetch_dashboard_payload(db_path: str) -> dict[str, object]:
             FROM probe_results
             """
         ).fetchall()
+        leaderboard_rows = conn.execute(
+            """
+            SELECT
+              model_name,
+              COUNT(*) AS run_count,
+              AVG(CAST(json_extract(metadata_json, '$.overall_detection_rate') AS DOUBLE)) AS avg_detection_rate
+            FROM runs
+            GROUP BY model_name
+            ORDER BY avg_detection_rate DESC NULLS LAST, run_count DESC, model_name
+            """
+        ).fetchall()
+        trend_rows = conn.execute(
+            """
+            SELECT
+              model_name,
+              created_at,
+              CAST(json_extract(metadata_json, '$.overall_detection_rate') AS DOUBLE) AS overall_detection_rate
+            FROM runs
+            ORDER BY created_at ASC, model_name ASC
+            """
+        ).fetchall()
     return {
         "latest": latest,
         "model_counts": [{"model_name": row[0], "count": row[1]} for row in model_counts],
@@ -210,5 +231,13 @@ def fetch_dashboard_payload(db_path: str) -> dict[str, object]:
         "probe_rows": [
             {"category": row[0], "detected": row[1], "confidence": row[2]}
             for row in probe_rows
+        ],
+        "model_leaderboard": [
+            {"model_name": row[0], "run_count": row[1], "avg_detection_rate": row[2]}
+            for row in leaderboard_rows
+        ],
+        "trend_rows": [
+            {"model_name": row[0], "created_at": str(row[1]), "overall_detection_rate": row[2]}
+            for row in trend_rows
         ],
     }
