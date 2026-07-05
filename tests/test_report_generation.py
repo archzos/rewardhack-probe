@@ -52,3 +52,27 @@ def test_env_result_persistence(tmp_path) -> None:
     )
     latest = fetch_latest_report(str(db_path))
     assert latest is not None
+
+
+def test_dashboard_payload_includes_leaderboard_and_trends(tmp_path) -> None:
+    db_path = tmp_path / "results.duckdb"
+    report_a = score_report(
+        run_id="run-a",
+        model_name="mock:a",
+        run_type="probe",
+        results_by_category={"eval_awareness": []},
+    )
+    report_b = score_report(
+        run_id="run-b",
+        model_name="mock:b",
+        run_type="probe",
+        results_by_category={"eval_awareness": []},
+    )
+    write_report(db_path=str(db_path), report=report_a)
+    write_report(db_path=str(db_path), report=report_b)
+
+    payload = fetch_dashboard_payload(str(db_path))
+    assert "model_leaderboard" in payload
+    assert "trend_rows" in payload
+    assert len(payload["model_leaderboard"]) == 2
+    assert len(payload["trend_rows"]) == 2

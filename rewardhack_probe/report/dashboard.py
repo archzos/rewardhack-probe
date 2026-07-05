@@ -44,6 +44,20 @@ def render(db_path: str) -> None:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    st.subheader("Model leaderboard")
+    st.dataframe(payload["model_leaderboard"], use_container_width=True)
+
+    if payload["trend_rows"]:
+        trend_fig = px.line(
+            payload["trend_rows"],
+            x="created_at",
+            y="overall_detection_rate",
+            color="model_name",
+            markers=True,
+            title="Cross-run model risk trend",
+        )
+        st.plotly_chart(trend_fig, use_container_width=True)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
